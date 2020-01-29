@@ -1,0 +1,24 @@
+{
+	"name": "script",
+	"version": "1.0.0",
+	"license": "MIT",
+	"dependencies": {
+		"@koa/router": "^8.0.5",
+		"@prisma/photon": "2.0.0-preview019",
+		"dotenv": "^8.2.0",
+		"koa": "^2.11.0",
+		"koa-bodyparser": "^4.2.1",
+		"koa-logger": "^3.2.1",
+		"koa-static": "^5.0.0",
+		"web-push": "^3.4.3"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.2",
+		"prisma2": "2.0.0-preview019"
+	},
+	"scripts": {
+		"start": "nodemon script.js",
+		"prisma": "prisma2 dev",
+		"generate": "prisma2 generate"
+	}
+}

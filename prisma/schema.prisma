@@ -1,0 +1,15 @@
+generator photon {
+  provider = "photonjs"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.db"
+}
+
+model Subscription {
+  id       String @default(cuid()) @id
+  endpoint String
+  p256dh   String
+  auth     String
+}
