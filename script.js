@@ -1,15 +1,18 @@
 const { Photon } = require("@prisma/photon");
 const webpush = require("web-push");
-require("dotenv").config();
 const Koa = require("koa");
 const logger = require("koa-logger");
 const serve = require("koa-static");
 const Router = require("@koa/router");
 const bodyParser = require("koa-bodyparser");
+const { getCurrentEntries } = require ("./scraper/scraper");
+require("dotenv").config();
 
 const photon = new Photon();
 const app = new Koa();
 const router = new Router();
+
+let previousEntries = [];
 
 webpush.setVapidDetails(
 	"mailto:example@yourdomain.org",
@@ -51,29 +54,59 @@ router.post("/subscribe", async (ctx, next) => {
 	ctx.status = 201;
 });
 
+findNewEntries = url => {
+  return new Promise((resolve, reject) => {
+    getCurrentEntries(url)
+      .then(currentEntries => {
+        const newEntries = currentEntries.filter(entry => {
+          return !previousEntries.includes(entry.link);
+        });
+
+        previousEntries = currentEntries.map(entry => {
+          return entry.link;
+        });
+
+        if (newEntries.length > 0) {
+          resolve(newEntries);
+        } else {
+          reject("No new entries found");
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
 setInterval(async () => {
-	try {
-		const subscriptions = await photon.subscriptions.findMany();
-		subscriptions.forEach(subscription => {
-			webpush.sendNotification(
-				{
-					endpoint: subscription.endpoint,
-					keys: { p256dh: subscription.p256dh, auth: subscription.auth }
-				},
-				JSON.stringify({
-					title: "Audruodas",
-					text: "Bybis",
-					image:
-						"https://i2.sndcdn.com/avatars-dRxpju9UqVfFn6aX-MSFAdA-t500x500.jpg",
-					url:
-						"https://i2.sndcdn.com/avatars-dRxpju9UqVfFn6aX-MSFAdA-t500x500.jpg"
-				})
-			);
-		});
-		console.log(`Sent notifications to ${subscriptions.length} subscribers`);
-	} catch (error) {
-		console.error(error);
-	}
+  findNewEntries(process.env.URL).then( entries => {
+    entries.forEach(async entry => {
+      try{
+        const subscriptions = await photon.subscriptions.findMany();
+        subscriptions.forEach(subscription => {
+          webpush.sendNotification(
+            {
+              endpoint: subscription.endpoint,
+              keys: { p256dh: subscription.p256dh, auth: subscription.auth }
+            },
+            JSON.stringify({
+              title: "Audruodas",
+              text: `Butas už: ${entry.price}, area: ${entry.area}, floor: ${entry.floor}`,
+              image:
+                "https://i2.sndcdn.com/avatars-dRxpju9UqVfFn6aX-MSFAdA-t500x500.jpg",
+              url:
+                entry.link
+            })
+          );
+        });
+        console.log(`Sent notifications to ${subscriptions.length} subscribers`);
+      } catch (error) {
+        console.log(error);
+      }
+    })
+  }).catch(error => {
+    console.log(error);
+  })
 }, 20000);
 
 app.use(router.routes()).use(router.allowedMethods());

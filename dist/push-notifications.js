@@ -1,5 +1,5 @@
 const pushServerPublicKey =
-	"BGLsY827vVl6CL2yaUymHBAJgu5kJT8cYsgIYgBbu5z7c1jiz59ZabcXrcZpogTi_7A9vi4mPqnJPwaISxWrAxs";
+  "BNexmQtOVl_N8RuZlQWU1gToMz4ZeMkZpK91-CNl_QX4BwzBCvBE2zAXAmXexLF1iFtnuhTQytSC8qWxcnAjtEI";
 
 export const isPushNotificationSupported = () =>
 	"serviceWorker" in navigator && "PushManager" in window;
